@@ -1,0 +1,76 @@
+# Choose your word size
+WSIZE = 64
+OPTLEVEL = 1
+# WSIZE = 32
+CC = gcc
+GFLAGS = -pg 
+INC = ./include
+MCFLAGS = -g -Wall -I. -I$(INC) -msse4
+# From ics2:
+# MCFLAGS = -g -Wall -O$(OPTLEVEL) -I. -I$(INC) -msse4 -fno-inline -fno-optimize-sibling-calls -lrt -mfpmath=sse
+# Remove -m sse4
+# MCFLAGS = -g -Wall -O$(OPTLEVEL) -I. -I$(INC) -fno-inline -fno-optimize-sibling-calls -lrt -mfpmath=sse
+CFLAGS = $(MCFLAGS) -m$(WSIZE)
+F386 = -march=i386
+F686 = -march=i686
+LIB = ./lib
+LIBCSAPP = $(LIB)/libcsapp$(WSIZE).a -lrt
+GETASM = ../getasmfun.pl
+RUNPOS = 0.8
+RUNCNT = 50
+MULTIRUN = ./multirun.pl -n $(RUNCNT) -p $(RUNPOS)
+BXTR = ./bxtr.pl
+VXTR = ./vxtr.pl
+TABULATE = ./tabulate.pl
+# Choose your machine
+# MACHINE = p4
+# MACHINE = athlon
+# MACHINE = haswell
+MACHINE=machine
+RESULTS=results
+
+PROGS = ibench\
+	lbench\
+	fbench\
+	dbench\
+
+all: bench
+
+bench: ibench lbench fbench dbench  
+
+ibench:   vec.h poly.h poly.c pbenchmark.c vec.c $(LIBCSAPP)
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DINT -o ibench pbenchmark.c poly.c vec.c $(LIBCSAPP)
+	$(MULTIRUN) -c ./ibench > $(RESULTS)/ib-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(BXTR) < $(RESULTS)/ib-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/ib-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).tab
+	$(VXTR) < $(RESULTS)/ib-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/ib-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).vtab
+
+lbench:   vec.h poly.h poly.c pbenchmark.c vec.c $(LIBCSAPP)
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DLONG -o lbench pbenchmark.c poly.c vec.c $(LIBCSAPP)
+	$(MULTIRUN) -c ./lbench > $(RESULTS)/lb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(BXTR) < $(RESULTS)/lb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/lb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).tab
+	$(VXTR) < $(RESULTS)/lb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/lb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).vtab
+
+fbench:   vec.h poly.h poly.c pbenchmark.c vec.c $(LIBCSAPP)
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DFLOAT -o fbench pbenchmark.c poly.c vec.c $(LIBCSAPP)
+	$(MULTIRUN) -c ./fbench > $(RESULTS)/fb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(BXTR) < $(RESULTS)/fb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/fb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).tab
+	$(VXTR) < $(RESULTS)/fb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/fb-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).vtab
+
+dbench:   vec.h poly.h poly.c pbenchmark.c vec.c $(LIBCSAPP)
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DDOUBLE -o dbench pbenchmark.c poly.c vec.c $(LIBCSAPP)
+	$(MULTIRUN) -c ./dbench > $(RESULTS)/db-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(BXTR) < $(RESULTS)/db-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/db-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).tab
+	$(VXTR) < $(RESULTS)/db-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt > $(RESULTS)/db-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).vtab
+
+tabulate: ibench lbench fbench dbench
+	$(TABULATE) -w $(WSIZE) -d $(RESULTS) -m $(MACHINE)-O$(OPTLEVEL) > $(RESULTS)/summary-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+
+bench-ncpe:	 $(LIBCSAPP)   vec.h poly.h poly.c benchmark-ncpe.c vec.c
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DSUM -DLONG -DUNROLL_ONLY -DCNT=31 -o bench-ncpe31 benchmark-ncpe.c poly.c vec.c $(LIBCSAPP) 
+	$(CC) $(CFLAGS) -O$(OPTLEVEL) -DSUM -DLONG -DUNROLL_ONLY -DCNT=8192 -o bench-ncpe8192 benchmark-ncpe.c poly.c vec.c $(LIBCSAPP) 
+	$(MULTIRUN) -c ./bench-ncpe31 > $(RESULTS)/ncpe-31-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(MULTIRUN) -c  ./bench-ncpe8192 > $(RESULTS)/ncpe-8192-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+	$(TABULATE) -r ncpe-31:ncpe-8192 -w $(WSIZE) -d $(RESULTS) -m $(MACHINE)-O$(OPTLEVEL) > $(RESULTS)/summary-ncpe-$(MACHINE)-O$(OPTLEVEL)-$(WSIZE).txt
+
+clean:
+	rm -f $(PROGS) *.o *~ *.s *.exe 

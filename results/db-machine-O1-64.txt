@@ -1,0 +1,4 @@
+Double Poly polycheck: Traditional execution:
+Best: 17.54 (12%), Overall Best: 17.54 40-most: 17.57 cycles/element
+Double Poly simd_v2: optimized poly:
+Best: 17.53 (2%), Overall Best: 17.54 40-most: 17.58 cycles/element

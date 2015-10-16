@@ -1,0 +1,4 @@
+Long Poly polycheck: Traditional execution:
+Best: 16.28 (2%), Overall Best: 16.29 40-most: 16.30 cycles/element
+Long Poly simd_v2: optimized poly:
+Best: 16.28 (4%), Overall Best: 16.29 40-most: 16.30 cycles/element
