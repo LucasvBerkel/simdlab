@@ -10,14 +10,14 @@ void polycheck(vec_ptr a, long degree, data_t x, data_t *dest)
 {
     long i;
     data_t val, result;
-    get_vec_element(a, degree, &result); 
-    for (i = degree-1; i >=0; i--) {
+    get_vec_element(a, degree, &result);
+    for (i = degree - 1; i >= 0; i--)
+    {
         get_vec_element(a, i, &val);
         /* $begin combineline */
-	    result = val + x*result;
+	       result = val + x*result;
         /* $end combineline */
     }
-    *dest = result;
 }
 /* $end polycheck */
 
@@ -46,37 +46,32 @@ typedef union {
 char opt_poly_descr[] = "simd_v2: optimized poly";
 void opt_poly(vec_ptr a, long degree, data_t x, data_t *dest)
 {
-    long i;
-    data_t val, result;
-    get_vec_element(a, degree, &result); 
-    for (i = degree-1; i > 0; i-=2) {
-        get_vec_element(a, i, &val);
-        /* $begin combineline */
-        result = val + x*result;
-        /* $end combineline */
-        get_vec_element(a, i-1, &val);
-        result = val + x*result;
-    }
-    for(;i >= 0; i--){
-        get_vec_element(a, i, &val);
-        result = val + x*result;
-    }
-    *dest = result;
-}
-/*
-{
-    long i;
+    long int i;
     pack_t xfer;
     vec_t accum0, accum1;
-    data_t *data = get_vec_start(a);
+    // data_t *data = get_vec_start(a);
     int cnt = vec_length(a);
     data_t result = 0;
 
-// fill in code here ... additional variables might be needed, too.
+    while(cnt >= VSIZE)
+    {
+        accum0 = *((vec_t *) a);
+        int limit = cnt - VSIZE;
+        for(i = cnt - 1; i > limit; i--)
+        {
+            set_vec_element(&accum1, i, x^cnt);
+        }
+        xfer.v = accum0 * powers.v;
+        for (i = 0; i < VSIZE; i++)
+            result += xfer.d[i];
+        a   += VSIZE;
+        cnt -= VSIZE;
+    }
+
+    // TODO remainder
 
     *dest = result;
 }
-*/
 
 void register_polys(void)
 {
@@ -86,10 +81,3 @@ void register_polys(void)
 
     log_poly(opt_poly, 0.16, 0.24);
 }
-
-
-
-
-
-
-
