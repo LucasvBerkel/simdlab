@@ -1,0 +1,4 @@
+Integer Poly polycheck: Traditional execution:
+Best: 11.26 (28%), Overall Best: 11.26 40-most: 11.36 cycles/element
+Integer Poly simd_v2: optimized poly:
+Best: 11.26 (2%), Overall Best: 11.27 40-most: 11.44 cycles/element

@@ -1,0 +1,4 @@
+Float Poly polycheck: Traditional execution:
+Best: 16.26 (2%), Overall Best: 16.27 40-most: 16.34 cycles/element
+Float Poly simd_v2: optimized poly:
+Best: 16.26 (6%), Overall Best: 16.27 40-most: 16.33 cycles/element
